@@ -1,15 +1,15 @@
-from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.orm import declarative_base, relationship
-Base = declarative_base()
+from sqlalchemy import Integer, String, Boolean
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from src.infrastructure.db.models.base import Base
 class Resource(Base):
     __tablename__ = "resources"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(30), nullable=False)
-    location = Column(String(60), nullable=False)
-    capacity = Column(Integer, nullable=False)
-    file_path = Column(String(300))
-    is_active = Column(Boolean, default=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    location: Mapped[str] = mapped_column(String(200), nullable=False)
+    capacity: Mapped[int] = mapped_column(Integer, nullable=False)
+    file_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    bookings = relationship("Booking", back_populates="resource")
-    time_slots = relationship("TimeSlot", back_populates="resource")
+    bookings: Mapped[list["Booking"]] = relationship(back_populates="resource")
+    time_slots: Mapped[list["TimeSlot"]] = relationship(back_populates="resource")
