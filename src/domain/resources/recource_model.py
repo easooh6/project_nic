@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean
-from database import Base
-
+from sqlalchemy.orm import declarative_base, relationship
+Base = declarative_base()
 class Resource(Base):
     __tablename__ = "resources"
 
@@ -10,3 +10,6 @@ class Resource(Base):
     capacity = Column(Integer, nullable=False)
     file_path = Column(String(300))
     is_active = Column(Boolean, default=True)
+
+    bookings = relationship("Booking", back_populates="resource")
+    time_slots = relationship("TimeSlot", back_populates="resource")
