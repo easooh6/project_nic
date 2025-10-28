@@ -1,22 +1,27 @@
-from datetime import datetime
-from typing import Any
+from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey, JSON, Index
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
-from sqlalchemy import ForeignKey, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.types import JSON, String, BigInteger, DateTime
-
-
-class Base(DeclarativeBase):
-    pass
+from base import Base 
 
 
 class AuditLog(Base):
     __tablename__ = "audit_log"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    actor_user_id: Mapped[int | None] = mapped_column(ForeignKey("user.id"), nullable=True)
-    action: Mapped[str] = mapped_column(String, nullable=False)
-    entity: Mapped[str] = mapped_column(String, nullable=False)
-    entity_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-    meta: Mapped[dict[str, Any] | None] = mapped_column(JSON, default={}, nullable=True)
-    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    id = Column(Integer, primary_key=True, index=True)
+    actor_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    action = Column(String, nullable=False, index=True)
+    entity = Column(String, nullable=False, index=True)
+    entity_id = Column(BigInteger, nullable=True, index=True)
+    meta = Column(JSON, nullable=True)
+    ts = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    actor_user = relationship(
+        "User",
+        back_populates="audit_logs",
+    )
+
+    __table_args__ = (
+        Index("ix_auditlog_entity_lookup", "entity", "entity_id"),
+        Index("ix_auditlog_actor_time", "actor_user_id", "ts"),
+    )
