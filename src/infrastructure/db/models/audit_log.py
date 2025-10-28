@@ -1,27 +1,17 @@
-from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey, JSON, Index
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-
-from base import Base 
+from sqlalchemy import ForeignKey, JSON, DateTime, func, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from src.infrastructure.db.models import Base 
 
 
 class AuditLog(Base):
     __tablename__ = "audit_log"
 
-    id = Column(Integer, primary_key=True, index=True)
-    actor_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    action = Column(String, nullable=False, index=True)
-    entity = Column(String, nullable=False, index=True)
-    entity_id = Column(BigInteger, nullable=True, index=True)
-    meta = Column(JSON, nullable=True)
-    ts = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    actor_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    action: Mapped[str] = mapped_column(String(100))
+    entity: Mapped[str] = mapped_column(String(100))
+    entity_id: Mapped[int] = mapped_column(Integer)
+    meta: Mapped[dict] = mapped_column(JSON)
+    ts: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    actor_user = relationship(
-        "User",
-        back_populates="audit_logs",
-    )
-
-    __table_args__ = (
-        Index("ix_auditlog_entity_lookup", "entity", "entity_id"),
-        Index("ix_auditlog_actor_time", "actor_user_id", "ts"),
-    )
+    actor_user = relationship("User", back_populates="audit_logs")
