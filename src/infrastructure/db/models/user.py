@@ -1,17 +1,12 @@
 from datetime import datetime
-from enum import Enum as PyEnum
 from sqlalchemy import String, Boolean, DateTime, Enum, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.infrastructure.db.models.base import Base
-
-
-class RoleEnum(str, PyEnum):
-    user = "user"
-    admin = "admin"
+from src.domain.enums import RoleEnum
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
