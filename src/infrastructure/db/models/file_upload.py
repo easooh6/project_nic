@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 
 class FileUpload(Base):
-    __tablename__ = "file_uploads"
+    __tablename__ = "file_upload"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     path: Mapped[str] = mapped_column(String, nullable=False)
@@ -15,7 +15,8 @@ class FileUpload(Base):
     mime: Mapped[str] = mapped_column(String)
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    owner_user_id: Mapped[int] = mapped_column(ForeignKey("Users.id"), nullable=False)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("User.id"), nullable=False)
+    owner_user: Mapped["User"] = relationship(back_populates="file_upload")
 
    
 
