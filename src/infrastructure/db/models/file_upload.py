@@ -11,7 +11,7 @@ class FileUpload(Base):
     path: Mapped[str] = mapped_column(String, nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer)
     mime: Mapped[str] = mapped_column(String)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), timezone=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
 
     owner_user_id: Mapped[int] = mapped_column(ForeignKey("User.id"), nullable=False)
     owner_user: Mapped["User"] = relationship("User", back_populates="file_upload", uselist=False)

@@ -10,8 +10,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from src.infrastructure.settings.db import DBSettings
-
+from src.infrastructure.settings.settings import settings
 from src.infrastructure.db.models.base import Base
 from src.infrastructure.db.models.file_upload import FileUpload
 
@@ -23,8 +22,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-
-config.set_main_option("sqlalchemy.url", DBSettings.DATABASE_URL_asyncpg + "?asunc_fallback=True")
+### Переподключение к нашему бд postgresql  ###
+config.set_main_option("sqlalchemy.url", settings.db.DATABASE_URL_asyncpg + "?asunc_fallback=True")
 
 target_metadata = Base.metadata
 
