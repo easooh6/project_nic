@@ -1,9 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from src.infrastructure.db.models.file_upload import FileUpload
-from domain.repositories.file_upload import IFileUploadRepository
 
-class FileUploadRepository(IFileUploadRepository):
+
+
+
+class FileUploadRepository():
 
     def __init__(self, session: AsyncSession):
         self.session = session
