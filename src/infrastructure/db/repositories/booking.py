@@ -4,6 +4,7 @@ from src.infrastructure.db.models.booking import Booking as BookingModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, update
 from typing import Callable, AsyncContextManager
+from datetime import datetime, timedelta
 
 class BookingRepository:
 
@@ -39,7 +40,33 @@ class BookingRepository:
                 return None
             
             return Booking.model_validate(model)
-    
+        
+    async def get_bookings_by_date(self, user_id: int, start_date: datetime,
+                                     end_date: datetime | None = None) -> list[Booking] | None:
+        
+        async with self.session_factory() as session:
+
+            if end_date is None:
+
+                query = select(BookingModel).where(
+                    BookingModel.user_id == user_id,
+                    BookingModel.created_at >= start_date,
+                    BookingModel.created_at < start_date + timedelta(days=1)
+                )
+            else:
+
+                query = select(BookingModel).where(
+                    BookingModel.user_id == user_id,
+                    BookingModel.created_at >= start_date,
+                    BookingModel.created_at <= end_date
+                )
+
+            models_raw = (await session.execute(query)).scalars().all()
+            if not models_raw:
+                return None
+
+            return [Booking.model_validate(model) for model in models_raw]    
+        
     async def get_booking_by_user_id(self, user_id: int) -> list[Booking] | None:
 
         async with self.session_factory() as session:
