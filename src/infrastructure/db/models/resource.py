@@ -1,6 +1,9 @@
 from sqlalchemy import Integer, String, Boolean
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from src.infrastructure.db.models.base import Base
+#from src.infrastructure.db.models.booking import Booking
+#from src.infrastructure.db.models.timeslot import TimeSlot
+
 class Resource(Base):
     __tablename__ = "resource"
 
