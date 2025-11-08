@@ -1,6 +1,6 @@
 from typing import Optional, List
 from sqlalchemy import select
-from src.domain.enums import RoleEnum
+from src.domain.enums.role import RoleEnum
 from src.infrastructure.db.models.user import User
 from src.infrastructure.db.db import get_db_session
 
