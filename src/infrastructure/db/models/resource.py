@@ -5,7 +5,7 @@ from src.infrastructure.db.models.base import Base
 #from src.infrastructure.db.models.timeslot import TimeSlot
 
 class Resource(Base):
-    __tablename__ = "resources"
+    __tablename__ = "resource"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -14,5 +14,5 @@ class Resource(Base):
     file_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    #bookings: Mapped[list["Booking"]] = relationship(back_populates="resource")
-    #time_slots: Mapped[list["TimeSlot"]] = relationship(back_populates="resource")
+    bookings: Mapped[list["Booking"]] = relationship("Booking", back_populates="resource")
+    time_slots: Mapped[list["TimeSlot"]] = relationship("TimeSlot", back_populates="resource")
