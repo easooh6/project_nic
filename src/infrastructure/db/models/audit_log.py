@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey, JSON, DateTime, func, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from src.infrastructure.db.models import Base 
+from src.infrastructure.db.models.base import Base 
 
 
 class AuditLog(Base):
@@ -14,4 +14,4 @@ class AuditLog(Base):
     meta: Mapped[dict] = mapped_column(JSON)
     ts: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    actor_user: Mapped["User"] = relationship("User", back_populates="audit_logs")
+    user: Mapped["User"] = relationship("User", back_populates="audit_logs")
