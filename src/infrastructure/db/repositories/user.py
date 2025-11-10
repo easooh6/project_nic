@@ -8,7 +8,7 @@ from src.infrastructure.db.db import get_db_session
 class UserRepository:
     
     def __init__(self):
-        self.session_factory = get_db_session()
+        self.session_factory = get_db_session
     
     async def create_user(self, email: str, password_hash: str, role: RoleEnum) -> User:
         async with self.session_factory() as session:

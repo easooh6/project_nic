@@ -8,7 +8,7 @@ from src.infrastructure.db.db import get_db_session
 class RefreshTokenRepository:
     
     def __init__(self):
-        self.session_factory = get_db_session()
+        self.session_factory = get_db_session
     
     async def create_token(self, token: str, user_id: int, expires_at: datetime) -> RefreshToken:
         async with self.session_factory() as session:
