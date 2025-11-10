@@ -7,6 +7,5 @@ python-dotenv==1.2.1
 SQLAlchemy==2.0.44
 typing-inspection==0.4.2
 typing_extensions==4.15.0
-alembic==1.13.1
-asyncpg==0.29.0
-bcrypt==4.1.2
+asyncpg
+alembic

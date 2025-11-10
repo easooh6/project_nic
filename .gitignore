@@ -1,33 +1,4 @@
-# Environment variables (содержит пароли БД)
 .env
-
-# Virtual environments
 venv/
 .venv/
-env/
-
-# Database files (локальные БД не нужны в репозитории)
-*.db
-*.sqlite
-*.sqlite3
-
-# Python cache
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# alembic/versions/*.py
