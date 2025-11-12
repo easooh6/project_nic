@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 from src.domain.entities.user import UserCreate, UserRead
 from src.domain.services.auth_service import AuthService
 
@@ -9,6 +9,16 @@ auth_service = AuthService()
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register_user(payload: UserCreate):
     """регистрация"""
-    user = await auth_service.register_user(payload)
-    return user
-    
+    try:
+        user = await auth_service.register_user(payload)
+        return user
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error: {e}"
+        )
