@@ -1,27 +1,37 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 from jose import jwt, JWTError
-from src.infrastructure.settings.auth import auth_settings
+from src.infrastructure.settings.settings import settings
+from src.domain.enums.role import RoleEnum
 
-def create_access_token(user_id: int) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=auth_settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload: Dict[str, Any] = {
-        "sub": str(user_id),
-        "type": "access",
-        "exp": expire
-    }
-    token = jwt.encode(payload, auth_settings.JWT_SECRET_KEY, algorithm=auth_settings.JWT_ALGORITHM)
-    return token
+class JWT:
+    def __init__(self):
+        self.secret_key = settings.auth.JWT_SECRET_KEY
+        self.algorithm = settings.auth.JWT_ALGORITHM
+        self.access_expire_min = settings.auth.ACCESS_TOKEN_EXPIRE_MINUTES
 
-def decode_access_token(token: str) -> Dict[str, Any]:
-    try:
-        payload = jwt.decode(token, auth_settings.JWT_SECRET_KEY, algorithms=[auth_settings.JWT_ALGORITHM])
-    except JWTError as e:
-        raise ValueError("Invalid or expired tokem") from e
-    if payload.get("type") != "access":
-        raise ValueError("Invalid type")
-    
-    sub = payload.get("sub")
-    if sub is None:
-        raise ValueError("Missing subject")
-    return payload
+    def create_access_token(self, user_id: int, role: RoleEnum) -> str:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=self.access_expire_min)
+        payload: Dict[str, Any] = {
+            "sub": str(user_id),
+            "role": role.value,
+            "type": "access",
+            "exp": expire
+        }
+        return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
+
+    def decode_access_token(self, token: str) -> Dict[str, Any]:
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+        except JWTError as e:
+            raise ValueError("Invalid or expired token") from e
+        
+        if payload.get("type") != "access":
+            raise ValueError("Invalid token type")
+        if "sub" not in payload:
+            raise ValueError("Missing subject")
+        
+        role = payload.get("role")
+        if role not in RoleEnum._value2member_map_:
+            raise ValueError("Invalid role value in token")
+        return payload
