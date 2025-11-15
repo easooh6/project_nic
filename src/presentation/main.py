@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-
 app = FastAPI(
     title="NIC project",
     description="API for NIC project",
