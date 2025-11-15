@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from domain.dto.user import UserRegister, UserRead
+from src.domain.dto.user import UserRegister, UserRead
 from src.domain.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])

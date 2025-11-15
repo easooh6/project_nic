@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 from src.infrastructure.db.repositories.user import UserRepository
-from domain.dto.user import UserRegister, UserRead
-from src.infrastructure.utils.password import HashingService
+from src.domain.dto.user import UserRegister, UserRead
+from src.infrastructure.utils.password import hash_password
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -18,7 +18,7 @@ class AuthService:
             raise ValueError("Email already exists")
 
        
-        password_hash = HashingService.hash_password(data.password)
+        password_hash = hash_password(data.password)
 
         
         user = await self.user_repo.create_user(
