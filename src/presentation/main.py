@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+import src.infrastructure.db.models
+from src.presentation.routers.auth_router import router as auth_router
 
 app = FastAPI(
     title="NIC project",
@@ -10,3 +12,5 @@ app = FastAPI(
 # app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 # app.include_router(user_router, prefix="/user", tags=["User Profile"])
 # app.include_router(search_router, prefix="/search", tags=["Search"])
+
+app.include_router(auth_router, prefix="/auth",tags=["Authentication"])
