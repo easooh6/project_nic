@@ -1,7 +1,7 @@
 from src.infrastructure.db.models.base import Base
 from sqlalchemy import Integer, String, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from src.infrastructure.db.models.user import User
+
 
 
 class FileUpload(Base):
