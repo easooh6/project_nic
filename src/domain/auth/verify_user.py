@@ -3,10 +3,11 @@ from src.infrastructure.db.repositories.user import UserRepository
 from src.domain.exceptions.auth.auth import RoleException
 from src.domain.exceptions.user.user import UserNotExistsException
 from src.domain.dto.auth.token import TokenDTO
+from src.domain.auth.jwt_service import JWT
 
 class UserVerify:
 
-    def __init__(self, user: UserRepository, jwt: JWTManager):
+    def __init__(self, user: UserRepository, jwt: JWT):
         self.user = user
         self.jwt = jwt
 
