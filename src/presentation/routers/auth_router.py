@@ -2,14 +2,14 @@ from fastapi import APIRouter, HTTPException, status
 from src.domain.dto.user import UserRegister, UserRead
 from src.domain.services.auth_service import AuthService
 
-router = APIRouter(prefix="/auth", tags=["auth"])
-auth_service = AuthService()
+router = APIRouter()
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register_user(payload: UserRegister):
     """регистрация"""
     try:
+        auth_service = AuthService() # тоесть как понял, каждый запрос создаёт свой экземпляр AuthService 
         user = await auth_service.register_user(payload)
         return user
     except ValueError as e:

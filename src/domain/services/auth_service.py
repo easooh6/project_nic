@@ -1,9 +1,6 @@
-from passlib.context import CryptContext
 from src.infrastructure.db.repositories.user import UserRepository
 from src.domain.dto.user import UserRegister, UserRead
 from src.infrastructure.utils.password import hash_password
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class AuthService:
     """регистрация"""

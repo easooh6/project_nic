@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-import src.infrastructure.db.models
+import src.infrastructure.db.models # нужен для загрузки моделей в ORM
 from src.presentation.routers.auth_router import router as auth_router
 
 app = FastAPI(
