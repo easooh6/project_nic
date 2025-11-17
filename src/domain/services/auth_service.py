@@ -1,49 +1,46 @@
-from src.domain.entities.user import UserRegister, UserLogin, UserResponse, LoginResponse
-from src.domain.enums.role import RoleEnum
 from src.infrastructure.db.repositories.user import UserRepository
+from src.domain.dto.user import UserRegister, UserRead
 from src.infrastructure.utils.password import hash_password, verify_password
-
+from src.domain.jwt_service import JWT
 
 class AuthService:
-    
     def __init__(self):
         self.user_repo = UserRepository()
-    
-    async def register_user(self, user_data: UserRegister) -> UserResponse:
-        existing_user = await self.user_repo.get_by_email(user_data.email)
-        if existing_user:
-            raise ValueError("Email already registered")
+        self.jwt_service = JWT()
+
+    async def register_user(self, data: UserRegister) -> UserRead | None:
         
-        hashed_password = hash_password(user_data.password)
+        existing = await self.user_repo.get_by_email(data.email)
+        if existing:
+            raise ValueError("Email already exists")
+
+       
+        password_hash = hash_password(data.password)
+
         
         user = await self.user_repo.create_user(
-            email=user_data.email,
-            password_hash=hashed_password,
-            role=user_data.role
+            email=data.email,
+            password_hash=password_hash,
+            role=data.role
         )
-        
-        return UserResponse.model_validate(user)
-    
-    async def login_user(self, user_data: UserLogin) -> LoginResponse:
-        user = await self.user_repo.get_by_email(user_data.email)
+
+        return UserRead.model_validate(user)
+
+    async def login_user(self, email: str, password: str) -> dict:
+        user = await self.user_repo.get_by_email(email)
         if not user:
             raise ValueError("Invalid email or password")
 
         if not user.is_active:
             raise ValueError("User account is disabled")
         
-        if not verify_password(user_data.password, user.password_hash):
+        if not verify_password(password, user.password_hash):
             raise ValueError("Invalid email or password")
         
-        # TODO: Заменить на реальный JWT когда jwt_service будет готов
-        return LoginResponse(
-            access="todo", 
-            user=UserResponse.model_validate(user)
-        )
-    
-    async def get_user_by_id(self, user_id: int) -> UserResponse:
-        user = await self.user_repo.get_by_id(user_id)
-        if not user:
-            raise ValueError("User not found")
+        access_token = self.jwt_service.create_access_token(user.id, user.role)
         
-        return UserResponse.model_validate(user)
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": UserRead.model_validate(user)
+        }
