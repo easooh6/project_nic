@@ -3,7 +3,7 @@ from src.presentation.di.service.auth.verify import get_verify_access
 from presentation.routers.auth.responses.me import MeResponse
 from src.domain.dto.auth.token import TokenDTO
 from src.domain.user.user import UserService
-from src.domain.dto.user.user_dto import UserRegister, UserRead
+from src.domain.dto.user import UserRegister, UserRead
 from src.domain.auth.auth_service import AuthService
 from src.presentation.routers.auth.responses.refresh import RefreshResponse
 from src.presentation.routers.auth.requests.refresh import RefreshRequest
