@@ -1,5 +1,5 @@
 from src.infrastructure.db.repositories.user import UserRepository
-from src.domain.dto.user import UserRegister, UserRead
+from src.domain.dto.user import UserRegister, UserRead, LoginResponse
 from src.infrastructure.utils.password import hash_password, verify_password
 from src.domain.jwt_service import JWT
 
@@ -26,7 +26,7 @@ class AuthService:
 
         return UserRead.model_validate(user)
 
-    async def login_user(self, email: str, password: str) -> dict:
+    async def login_user(self, email: str, password: str) -> LoginResponse:
         user = await self.user_repo.get_by_email(email)
         if not user:
             raise ValueError("Invalid email or password")
@@ -39,8 +39,9 @@ class AuthService:
         
         access_token = self.jwt_service.create_access_token(user.id, user.role)
         
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": UserRead.model_validate(user)
-        }
+        return LoginResponse(
+            access_token=access_token,
+            refresh_token="",  # Пока пустая строка
+            token_type="bearer",
+            user=UserRead.model_validate(user)
+        )
