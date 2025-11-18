@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
-from src.domain.enums.role import RoleEnum
 from datetime import datetime
+from src.domain.enums.role import RoleEnum
 
 class UserDTO(BaseModel):
     
@@ -14,7 +14,7 @@ class UserDTO(BaseModel):
         "extra": "ignore",
         "from_attributes": True
     }
-
+    
 class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6, max_length=128)
@@ -29,4 +29,21 @@ class UserRead(BaseModel):
     created_at: datetime
 
     class Config:
+        from_attributes = True
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+    class Config:
+        from_attributes = True
+
+class LoginResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    user: UserRead
+
+    class Config:
+        from_attributes = True
         from_attributes = True

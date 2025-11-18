@@ -4,7 +4,7 @@ from src.domain.enums.role import RoleEnum
 
 class TokenDTO(BaseModel):
 
-    sub: str
+    sub: int
     role: RoleEnum
     type: str = "access"
     exp: datetime

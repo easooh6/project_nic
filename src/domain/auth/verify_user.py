@@ -1,6 +1,6 @@
 from src.domain.enums.role import RoleEnum
 from src.infrastructure.db.repositories.user import UserRepository
-from src.domain.exceptions.auth.auth import RoleException
+from src.domain.exceptions.user.user import RoleException
 from src.domain.exceptions.user.user import UserNotExistsException, UserStateException
 from src.domain.dto.auth.token import TokenDTO
 from src.domain.auth.jwt_service import JWT
@@ -36,7 +36,7 @@ class UserVerify:
 
     async def verify_access(self, token: str) -> TokenDTO:
 
-        payload = await self.jwt.decode_access_token(token)
+        payload = self.jwt.decode_access_token(token)
         
         user_id = payload.get("sub")
         await self._check_existence_and_state(user_id)

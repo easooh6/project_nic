@@ -4,7 +4,6 @@ from jose import jwt, JWTError
 from src.infrastructure.settings.settings import settings
 from src.domain.enums.role import RoleEnum
 from src.domain.entities.refresh import RefreshEntity
-from src.domain.exceptions.user.user import UserNotExistsException
 from src.domain.exceptions.auth.auth import RefreshExpiredException, RefreshRevokedException
 
 class JWT:
@@ -27,7 +26,7 @@ class JWT:
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
         except JWTError as e:
-            raise ValueError("Invalid or expired token") from e
+            raise ValueError(f"Invalid or expired token: {e}") from e
         
         if payload.get("type") != "access":
             raise ValueError("Invalid token type")
@@ -35,6 +34,7 @@ class JWT:
             raise ValueError("Missing subject")
         
         role = payload.get("role")
+        payload["sub"] = int(payload["sub"])
         if role not in RoleEnum._value2member_map_:
             raise ValueError("Invalid role value in token")
         return payload
