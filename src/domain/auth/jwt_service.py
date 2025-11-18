@@ -3,6 +3,9 @@ from typing import Any, Dict
 from jose import jwt, JWTError
 from src.infrastructure.settings.settings import settings
 from src.domain.enums.role import RoleEnum
+from src.domain.entities.refresh import RefreshEntity
+from src.domain.exceptions.user.user import UserNotExistsException
+from src.domain.exceptions.auth.auth import RefreshExpiredException, RefreshRevokedException
 
 class JWT:
     def __init__(self):
@@ -35,3 +38,14 @@ class JWT:
         if role not in RoleEnum._value2member_map_:
             raise ValueError("Invalid role value in token")
         return payload
+
+class RefreshValidator:
+
+    @staticmethod
+    def validate(entity: RefreshEntity):
+        if entity.revoked:
+            raise RefreshRevokedException
+        now = datetime.now(timezone.utc)
+        if entity.expires_at < now:
+            raise RefreshExpiredException
+        

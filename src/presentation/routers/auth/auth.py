@@ -1,18 +1,30 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from src.presentation.di.service.auth.verify import get_verify_access
-from src.presentation.routers.auth.responses.me_response import MeResponse
+from presentation.routers.auth.responses.me import MeResponse
 from src.domain.dto.auth.token import TokenDTO
 from src.domain.user.user import UserService
 from src.domain.dto.user.user_dto import UserRegister, UserRead
 from src.domain.auth.auth_service import AuthService
+from src.presentation.routers.auth.responses.refresh import RefreshResponse
+from src.presentation.routers.auth.requests.refresh import RefreshRequest
 
 router = APIRouter()
 
 @router.get('/me', response_model=MeResponse, status_code=status.HTTP_200_OK)
 async def me(user: TokenDTO = Depends(get_verify_access)):
+    
     service = UserService()
     dto = await service.get_user_by_id(user.sub)
     response = MeResponse(**dto.model_dump())
+
+    return response
+
+@router.get('/refresh', response_model=RefreshResponse, status_code=status.HTTP_200_OK)
+async def me(refresh_request: RefreshRequest):
+
+    service = AuthService()
+    access = await service.renew_access(refresh_request.refresh)
+    response = RefreshResponse(access=access)
 
     return response
 
