@@ -32,6 +32,7 @@ class JWT:
             raise ValueError("Missing subject")
         
         role = payload.get("role")
-        if role not in RoleEnum._value2member_map_:
-            raise ValueError("Invalid role value in token")
-        return payload
+        try:
+            RoleEnum(role)
+        except:
+            raise ValueError("Invaled role")
