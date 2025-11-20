@@ -1,4 +1,5 @@
 from fastapi import APIRouter, status, Depends, HTTPException
+from domain.exceptions.auth.auth import EmailAlreadyExistsException
 from src.presentation.di.service.auth.verify import get_verify_access
 from src.presentation.routers.auth.responses.me import MeResponse
 from src.domain.dto.auth.token import TokenDTO
@@ -35,11 +36,8 @@ async def register_user(user_register: UserRegisterRequest):
         auth_service = AuthService() # тоесть как понял, каждый запрос создаёт свой экземпляр AuthService 
         user = await auth_service.register_user(user_register)
         return user
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(e)
-        )
+    except EmailAlreadyExistsException as e:
+        raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -6,7 +6,7 @@ from src.infrastructure.utils.password import hash_password
 from src.domain.entities.refresh import RefreshEntity
 from src.domain.entities.user import User
 from src.domain.exceptions.user.user import UserNotExistsException
-from src.domain.exceptions.auth.auth import RefreshNotFoundException
+from src.domain.exceptions.auth.auth import EmailAlreadyExistsException, RefreshNotFoundException
 from src.infrastructure.utils.password import hash_password, verify_password
 from src.presentation.routers.auth.requests.user_register import UserRegisterRequest
 
@@ -22,7 +22,7 @@ class AuthService:
         
         existing = await self.user_repo.get_by_email(data.email)
         if existing:
-            raise ValueError("Email already exists")
+            raise EmailAlreadyExistsException()
 
        
         password_hash = hash_password(data.password)
