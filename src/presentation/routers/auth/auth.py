@@ -3,10 +3,11 @@ from src.presentation.di.service.auth.verify import get_verify_access
 from src.presentation.routers.auth.responses.me import MeResponse
 from src.domain.dto.auth.token import TokenDTO
 from src.domain.user.user import UserService
-from src.domain.dto.user.user_dto import UserRegister, UserRead, UserLogin
+from src.domain.dto.user.user_dto import UserRead, UserLogin
 from src.domain.auth.auth_service import AuthService
 from src.presentation.routers.auth.responses.refresh import RefreshResponse
 from src.presentation.routers.auth.requests.refresh import RefreshRequest
+from src.presentation.routers.auth.requests.user_register import UserRegisterRequest
 
 router = APIRouter()
 
@@ -28,11 +29,11 @@ async def refresh(refresh_request: RefreshRequest):
     return response
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register_user(payload: UserRegister):
+async def register_user(user_register: UserRegisterRequest):
     """регистрация"""
     try:
         auth_service = AuthService() # тоесть как понял, каждый запрос создаёт свой экземпляр AuthService 
-        user = await auth_service.register_user(payload)
+        user = await auth_service.register_user(user_register)
         return user
     except ValueError as e:
         raise HTTPException(
