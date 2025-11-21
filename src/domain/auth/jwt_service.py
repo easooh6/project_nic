@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 from jose import jwt, JWSError, JWTError
 from jose.exceptions import JWTClaimsError, JWEError, ExpiredSignatureError
+from src.domain.exceptions.user.user import RoleException
 from src.infrastructure.settings.settings import settings
 from src.domain.enums.role import RoleEnum
 from src.domain.entities.refresh import RefreshEntity
@@ -33,7 +34,7 @@ class JWT:
         except JWSError:
             raise JWSError("Invalid token signature")
         except JWEError:
-            raise JWEError("Invalid token decryption")
+            raise JWEError("Invalid token decryption")  
         except JWTError as e:
             raise JWTError(f"Invalid token: {e}") from e
         
@@ -46,8 +47,8 @@ class JWT:
         payload["sub"] = int(payload["sub"])
         try:
             RoleEnum(role)
-        except JWTClaimsError as e:
-            raise JWTClaimsError("Invalid role value in token")
+        except ValueError as e:
+            raise RoleException() from e
         return payload
 
 class RefreshValidator:

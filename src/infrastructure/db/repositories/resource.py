@@ -2,15 +2,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from src.infrastructure.db.models.resource import Resource
 from src.infrastructure.db.db import get_db_session
-from src.domain.exceptions.resource.resource import ResourceInactiveException,ResourceNotFoundException, ResourceInvalidDataException
+
 
 class ResourceRepository:
     def __init__(self):
         self.session_factory = get_db_session
 
     async def create(self,name: str, location: str, capacity: int, file_path: str | None = None) -> Resource:
-        if capacity < 0: 
-            raise ResourceInvalidDataException("capacity")
         async with self.session_factory() as session:
             new_resource = Resource(
                 name=name,
@@ -25,12 +23,7 @@ class ResourceRepository:
     async def get_by_id(self, resource_id: int) -> Resource | None:
         async with self.session_factory() as session:
             result = await session.execute(select(Resource).where(Resource.id == resource_id))
-            resource = result.scalar_one_or_none()
-            if not resource:
-                raise ResourceNotFoundException()
-            if not resource.is_active():
-                raise ResourceInactiveException()
-            return resource
+            return result.scalar_one_or_none()
 
     async def get_all(self) -> list[Resource]:
         async with self.session_factory() as session:
@@ -57,9 +50,7 @@ class ResourceRepository:
             result = await session.execute(select(Resource).where(Resource.id == resource_id))
             resource = result.scalar_one_or_none()
             if not resource:
-                return ResourceNotFoundException()
-            if not resource.is_active():
-                raise ResourceInactiveException()
+                return None
 
             for key, value in data.items():
                 if hasattr(resource, key):
@@ -72,9 +63,7 @@ class ResourceRepository:
             result = await session.execute(select(Resource).where(Resource.id == resource_id))
             resource = result.scalar_one_or_none()
             if not resource:
-                raise ResourceNotFoundException()
-            if not resource.is_active():
-                raise ResourceInactiveException()
+                return False
 
             await session.delete(resource)
             await session.flush()
