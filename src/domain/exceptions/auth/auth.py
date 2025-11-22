@@ -2,12 +2,21 @@
 class BaseAuthException(Exception):
     pass
 
-class RoleException(BaseAuthException):
-
+class RefreshRevokedException(BaseAuthException):
+    
     def __init__(self):
-        super().__init__("Not correct role")
+        super().__init__("Refresh expired")
 
-class UserNotExistsException(BaseAuthException):
-
+class RefreshExpiredException(BaseAuthException):
+    
     def __init__(self):
-        super().__init__("User not exists")
+        super().__init__("Refresh expired")
+
+class RefreshNotFoundException(BaseAuthException):
+    
+    def __init__(self):
+        super().__init__("Refresh not found")
+
+class EmailAlreadyExistsException(Exception):
+    def __init__(self):
+        super().__init__("User with this email already exists")
