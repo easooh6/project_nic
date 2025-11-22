@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
-from jose import jwt, JWTError
+from jose import jwt, JWSError, JWTError
+from jose.exceptions import JWTClaimsError, JWEError, ExpiredSignatureError
+from src.domain.exceptions.user.user import RoleException
 from src.infrastructure.settings.settings import settings
 from src.domain.enums.role import RoleEnum
 from src.domain.entities.refresh import RefreshEntity
@@ -25,18 +27,28 @@ class JWT:
     def decode_access_token(self, token: str) -> Dict[str, Any]:
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+        except ExpiredSignatureError:
+            raise ExpiredSignatureError("Access token has expired")
+        except JWTClaimsError as e:
+            raise JWTClaimsError(f"Invalid claims in token{e}") from e
+        except JWSError:
+            raise JWSError("Invalid token signature")
+        except JWEError:
+            raise JWEError("Invalid token decryption")  
         except JWTError as e:
-            raise ValueError(f"Invalid or expired token: {e}") from e
+            raise JWTError(f"Invalid token: {e}") from e
         
         if payload.get("type") != "access":
-            raise ValueError("Invalid token type")
+            raise JWTClaimsError("Invalid token type")
         if "sub" not in payload:
-            raise ValueError("Missing subject")
+            raise JWTClaimsError("Missing subject")
         
         role = payload.get("role")
         payload["sub"] = int(payload["sub"])
-        if role not in RoleEnum._value2member_map_:
-            raise ValueError("Invalid role value in token")
+        try:
+            RoleEnum(role)
+        except ValueError as e:
+            raise RoleException() from e
         return payload
 
 class RefreshValidator:
