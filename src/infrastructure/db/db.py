@@ -10,8 +10,6 @@ _async_session_fabric = None
 
 def get_session_fabric():
 
-    global _async_session_fabric
-
     if _async_session_fabric is None:
         raise RuntimeError("Database is not initialized.")
     
@@ -31,6 +29,7 @@ async def init_db():
     
     async with _async_engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
+        print("db connection successfully established")
 
     if _async_session_fabric is None:
         _async_session_fabric = async_sessionmaker(_async_engine,expire_on_commit=False)
@@ -39,8 +38,6 @@ async def init_db():
     return
 
 async def close_db():
-
-    global _async_engine
 
     if _async_engine:
         await _async_engine.dispose()

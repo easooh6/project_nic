@@ -5,7 +5,7 @@ from src.infrastructure.redis.client import init_redis_client, close_redis_clien
 from src.infrastructure.db.db import init_db, close_db
 
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app: FastAPI):
     await init_db()
     await init_redis_client()
     yield

@@ -14,6 +14,7 @@ async def init_redis_client():
         )
     try:
         await _redis_client.ping()
+        print("redis connection successfully established")
     except Exception as e:
         raise e
     
