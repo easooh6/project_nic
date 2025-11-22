@@ -9,6 +9,7 @@ from src.domain.auth.auth_service import AuthService
 from src.presentation.routers.auth.responses.refresh import RefreshResponse
 from src.presentation.routers.auth.requests.refresh import RefreshRequest
 from src.presentation.routers.auth.requests.user_register import UserRegisterRequest
+from src.presentation.routers.auth.responses.user_register import UserRegisterResponse
 
 router = APIRouter()
 
@@ -30,12 +31,18 @@ async def refresh(refresh_request: RefreshRequest):
     return response
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register_user(user_register: UserRegisterRequest):
+async def register_user(user_register: UserRegisterRequest): # тут получаем данные для серва suth_service
     """регистрация"""
     try:
-        auth_service = AuthService() # тоесть как понял, каждый запрос создаёт свой экземпляр AuthService 
-        user = await auth_service.register_user(user_register)
-        return user
+        auth_service = AuthService()
+        user = await auth_service.register_user(user_register) # а точнее .register_user передает
+
+        return UserRegisterResponse( #Возвращаем на ручку только то что можно видеть пользователю
+            id=user.id,
+            email=user.email,
+            role=user.role,
+            created_at=user.created_at
+        )
     except EmailAlreadyExistsException as e:
         raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:

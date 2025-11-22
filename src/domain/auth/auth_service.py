@@ -1,6 +1,6 @@
 from src.infrastructure.db.repositories.user import UserRepository
 from src.infrastructure.db.repositories.token import RefreshTokenRepository
-from src.domain.dto.user.user_dto import UserRead, LoginResponse
+from src.domain.dto.user.user_dto import UserRead, LoginResponse #потом убрать userRead
 from src.domain.auth.jwt_service import JWT, RefreshValidator
 from src.infrastructure.utils.password import hash_password
 from src.domain.entities.refresh import RefreshEntity
@@ -18,7 +18,7 @@ class AuthService:
         self.refresh_repo = RefreshTokenRepository()
         self.access_service = JWT()
 
-    async def register_user(self, data: UserRegisterRequest) -> UserRead | None:
+    async def register_user(self, data: UserRegisterRequest):
         
         existing = await self.user_repo.get_by_email(data.email)
         if existing:
@@ -34,7 +34,7 @@ class AuthService:
             role=data.role
         )
 
-        return UserRead.model_validate(user)
+        return user #просто возвращаем ORM-модель т.к. UserRead должен быть удален
     
     async def login_user(self, email: str, password: str) -> LoginResponse:
         user = await self.user_repo.get_by_email(email)
