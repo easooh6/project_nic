@@ -1,13 +1,14 @@
 from src.infrastructure.db.repositories.user import UserRepository
 from src.infrastructure.db.repositories.token import RefreshTokenRepository
-from src.domain.dto.user.user_dto import UserRegister, UserRead, LoginResponse
+from src.domain.dto.user.user_dto import UserRead, LoginResponse #потом убрать userRead
 from src.domain.auth.jwt_service import JWT, RefreshValidator
 from src.infrastructure.utils.password import hash_password
 from src.domain.entities.refresh import RefreshEntity
 from src.domain.entities.user import User
 from src.domain.exceptions.user.user import UserNotExistsException
-from src.domain.exceptions.auth.auth import RefreshNotFoundException
+from src.domain.exceptions.auth.auth import EmailAlreadyExistsException, RefreshNotFoundException
 from src.infrastructure.utils.password import hash_password, verify_password
+from src.presentation.routers.auth.requests.user_register import UserRegisterRequest
 
 class AuthService:
     """регистрация"""
@@ -17,11 +18,11 @@ class AuthService:
         self.refresh_repo = RefreshTokenRepository()
         self.access_service = JWT()
 
-    async def register_user(self, data: UserRegister) -> UserRead | None:
+    async def register_user(self, data: UserRegisterRequest):
         
         existing = await self.user_repo.get_by_email(data.email)
         if existing:
-            raise ValueError("Email already exists")
+            raise EmailAlreadyExistsException()
 
        
         password_hash = hash_password(data.password)
@@ -33,7 +34,7 @@ class AuthService:
             role=data.role
         )
 
-        return UserRead.model_validate(user)
+        return user #просто возвращаем ORM-модель т.к. UserRead должен быть удален
     
     async def login_user(self, email: str, password: str) -> LoginResponse:
         user = await self.user_repo.get_by_email(email)
@@ -74,6 +75,6 @@ class AuthService:
 
         entity_user = User.model_validate(user)
         
-        access = await self.access_service.create_access_token(user_id, entity_user.role)
+        access = self.access_service.create_access_token(user_id, entity_user.role)
 
         return access
