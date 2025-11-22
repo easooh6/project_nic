@@ -15,13 +15,6 @@ class UserDTO(BaseModel):
         "from_attributes": True
     }
     
-class UserRegister(BaseModel):
-    email: EmailStr
-    password: str = Field(min_length=6, max_length=128)
-    role: RoleEnum = RoleEnum.user
-
-    class Config:
-        from_attributes = True
 
 class UserRead(BaseModel):
     id: int
