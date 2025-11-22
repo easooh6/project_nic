@@ -1,8 +1,12 @@
+from uuid import uuid4
+from datetime import datetime, timedelta, timezone
+
+from src.infrastructure.settings.settings import settings
+
 from src.infrastructure.db.repositories.user import UserRepository
 from src.infrastructure.db.repositories.token import RefreshTokenRepository
 from src.domain.dto.user.user_dto import UserRead, LoginResponse #потом убрать userRead
 from src.domain.auth.jwt_service import JWT, RefreshValidator
-from src.infrastructure.utils.password import hash_password
 from src.domain.entities.refresh import RefreshEntity
 from src.domain.entities.user import User
 from src.domain.exceptions.user.user import UserNotExistsException
@@ -17,6 +21,22 @@ class AuthService:
         self.user_repo = UserRepository()
         self.refresh_repo = RefreshTokenRepository()
         self.access_service = JWT()
+    
+    async def _create_refresh_token(self, user_id: int) -> str:
+        token = uuid4().hex
+
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            days=settings.auth.REFRESH_TOKEN_EXPIRE_DAYS
+        )
+
+        await self.refresh_repo.create_token(
+            token= token,          #token
+            user_id=user_id,
+            expires_at=expires_at
+        )
+
+        return token
+
 
     async def register_user(self, data: UserRegisterRequest):
         
@@ -48,13 +68,16 @@ class AuthService:
             raise ValueError("Invalid email or password")
         
         access_token = self.access_service.create_access_token(user.id, user.role)
-        
+
+        refresh_token = await self._create_refresh_token(user.id)
+
         return LoginResponse(
             access_token=access_token,
-            refresh_token="",  # Пока пустая строка
+            refresh_token=refresh_token,
             token_type="bearer",
             user=UserRead.model_validate(user)
         )
+
         
     async def renew_access(self, refresh_token: str) -> str:
 
