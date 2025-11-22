@@ -3,6 +3,7 @@ from sqlalchemy import select
 from src.infrastructure.db.models.resource import Resource
 from src.infrastructure.db.db import get_db_session
 
+
 class ResourceRepository:
     def __init__(self):
         self.session_factory = get_db_session
@@ -23,7 +24,7 @@ class ResourceRepository:
         async with self.session_factory() as session:
             result = await session.execute(select(Resource).where(Resource.id == resource_id))
             return result.scalar_one_or_none()
-        
+
     async def get_all(self) -> list[Resource]:
         async with self.session_factory() as session:
             result = await session.execute(select(Resource))
