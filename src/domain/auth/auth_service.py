@@ -74,6 +74,6 @@ class AuthService:
 
         entity_user = User.model_validate(user)
         
-        access = await self.access_service.create_access_token(user_id, entity_user.role)
+        access = self.access_service.create_access_token(user_id, entity_user.role)
 
         return access
