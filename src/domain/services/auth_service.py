@@ -1,6 +1,6 @@
 from src.infrastructure.db.repositories.user import UserRepository
-from src.domain.auth.requests import RegisterRequest
-from src.domain.auth.responses import UserResponse, LoginResponse
+from src.presentation.requests import RegisterRequest
+from src.presentation.responses import UserResponse, LoginResponse
 from src.infrastructure.utils.password import hash_password, verify_password
 from src.domain.jwt_service import JWT
 from src.domain.exceptions import (
@@ -43,27 +43,29 @@ class AuthService:
             raise InvalidCredentialsException()
         
         access_token = self.jwt_service.create_access_token(user.id, user.role)
-        refresh_token = self.jwt_service.create_refresh_token(user.id)
+        # TODO: refresh_token 
+        # refresh_token = self.jwt_service.create_refresh_token(user.id)
         
         return LoginResponse(
             access_token=access_token,
-            refresh_token=refresh_token,
             token_type="Bearer",
             user=UserResponse.model_validate(user)
         )
 
-    async def renew_access(self, refresh_token: str) -> str:
-        try:
-            payload = self.jwt_service.decode_refresh_token(refresh_token)
-            user_id = int(payload["sub"])
-            await self._check_existence_and_state(user_id)
-            user = await self.user_repo.get_by_id(user_id)
-            
-            new_access_token = self.jwt_service.create_access_token(user.id, user.role)
-            return new_access_token
-            
-        except Exception:
-            raise InvalidTokenException()
+    # TODO: Метод renew_access 
+    # async def renew_access(self, refresh_token: str) -> str:
+    #     Обновление access токена по refresh токену
+    #     try:
+    #         payload = self.jwt_service.decode_refresh_token(refresh_token)
+    #         user_id = int(payload["sub"])
+    #         await self._check_existence_and_state(user_id)
+    #         user = await self.user_repo.get_by_id(user_id)
+    #         
+    #         new_access_token = self.jwt_service.create_access_token(user.id, user.role)
+    #         return new_access_token
+    #         
+    #     except Exception:
+    #         raise InvalidTokenException()
 
     async def _check_existence_and_state(self, user_id: int):
         user = await self.user_repo.get_by_id(user_id)

@@ -15,7 +15,7 @@ class UserResponse(BaseModel):
 
 class LoginResponse(BaseModel):
     access_token: str
-    refresh_token: str
+    # refresh_token: str  # TODO
     token_type: str = "Bearer"
     user: UserResponse
     
@@ -24,11 +24,5 @@ class LoginResponse(BaseModel):
 
 class RegisterResponse(BaseModel):
     user: UserResponse
-    
-    model_config = ConfigDict(from_attributes=True)
-
-
-class RefreshResponse(BaseModel):
-    access: str
     
     model_config = ConfigDict(from_attributes=True)
