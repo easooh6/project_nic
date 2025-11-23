@@ -10,5 +10,5 @@ class EmailSettings(BaseSettings):
 
     class Config:
         env_file = ".env"
-
-email_settings = EmailSettings()
+        extra = "ignore"
+        

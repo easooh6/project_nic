@@ -1,15 +1,15 @@
 import aiosmtplib
 from email.message import EmailMessage
-from src.infrastructure.settings.email import email_settings
+from src.infrastructure.settings.settings import settings
 
 class EmailService:
     def __init__(self):
-        self.host = email_settings.SMTP_HOST
-        self.port = email_settings.SMTP_PORT
-        self.username = email_settings.SMTP_USER
-        self.password = email_settings.SMTP_PASSWORD
-        self.email_from = email_settings.EMAIL_FROM
-        self.use_tls = email_settings.EMAIL_TLS
+        self.host = settings.email.SMTP_HOST
+        self.port = settings.email.SMTP_PORT
+        self.username = settings.email.SMTP_USER
+        self.password = settings.email.SMTP_PASSWORD
+        self.email_from = settings.email.EMAIL_FROM
+        self.use_tls = settings.email.EMAIL_TLS
 
     async def send_email(self, to: str, subject: str, body: str):
         message = EmailMessage()
