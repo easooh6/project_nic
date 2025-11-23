@@ -1,11 +1,6 @@
-from uuid import uuid4
-from datetime import datetime, timedelta, timezone
-
-from src.infrastructure.settings.settings import settings
-
 from src.infrastructure.db.repositories.user import UserRepository
 from src.infrastructure.db.repositories.token import RefreshTokenRepository
-from src.domain.dto.user.user_dto import UserRead, LoginResponse #потом убрать userRead
+from src.domain.dto.user.user_dto import UserRead, LoginResponse
 from src.domain.auth.jwt_service import JWT, RefreshValidator
 from src.domain.entities.refresh import RefreshEntity
 from src.domain.entities.user import User
@@ -14,6 +9,9 @@ from src.domain.exceptions.auth.auth import EmailAlreadyExistsException, Refresh
 from src.infrastructure.utils.password import hash_password, verify_password
 from src.presentation.routers.auth.requests.user_register import UserRegisterRequest
 
+from src.domain.services.refresh_token_service import RefreshTokenService
+
+
 class AuthService:
     """регистрация"""
 
@@ -21,22 +19,7 @@ class AuthService:
         self.user_repo = UserRepository()
         self.refresh_repo = RefreshTokenRepository()
         self.access_service = JWT()
-    
-    async def _create_refresh_token(self, user_id: int) -> str:
-        token = uuid4().hex
-
-        expires_at = datetime.now(timezone.utc) + timedelta(
-            days=settings.auth.REFRESH_TOKEN_EXPIRE_DAYS
-        )
-
-        await self.refresh_repo.create_token(
-            token= token,          #token
-            user_id=user_id,
-            expires_at=expires_at
-        )
-
-        return token
-
+        self.refresh_service = RefreshTokenService()   # <-- добавили как лидер сказал
 
     async def register_user(self, data: UserRegisterRequest):
         
@@ -44,17 +27,15 @@ class AuthService:
         if existing:
             raise EmailAlreadyExistsException()
 
-       
         password_hash = hash_password(data.password)
 
-        
         user = await self.user_repo.create_user(
             email=data.email,
             password_hash=password_hash,
             role=data.role
         )
 
-        return user #просто возвращаем ORM-модель т.к. UserRead должен быть удален
+        return user
     
     async def login_user(self, email: str, password: str) -> LoginResponse:
         user = await self.user_repo.get_by_email(email)
@@ -69,7 +50,8 @@ class AuthService:
         
         access_token = self.access_service.create_access_token(user.id, user.role)
 
-        refresh_token = await self._create_refresh_token(user.id)
+        # <-- Теперь создаём refresh-токен через RefreshTokenService
+        refresh_token = await self.refresh_service.create_refresh_token(user.id)
 
         return LoginResponse(
             access_token=access_token,
@@ -78,14 +60,13 @@ class AuthService:
             user=UserRead.model_validate(user)
         )
 
-        
     async def renew_access(self, refresh_token: str) -> str:
 
         token = await self.refresh_repo.get_by_token(refresh_token)
         
         if token is None:
-            raise RefreshNotFoundException
-        
+            raise RefreshNotFoundException()
+
         entity_refresh = RefreshEntity.model_validate(token)
 
         RefreshValidator.validate(entity_refresh)
@@ -94,7 +75,7 @@ class AuthService:
         user = await self.user_repo.get_by_id(user_id)
 
         if user is None:
-            raise UserNotExistsException
+            raise UserNotExistsException()
 
         entity_user = User.model_validate(user)
         
