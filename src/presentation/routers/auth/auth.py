@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-from domain.exceptions.auth.auth import EmailAlreadyExistsException
+from src.domain.exceptions.auth.auth import EmailAlreadyExistsException
 from src.presentation.di.service.auth.verify import get_verify_access
 from src.presentation.routers.auth.responses.me import MeResponse
 from src.domain.dto.auth.token import TokenDTO
