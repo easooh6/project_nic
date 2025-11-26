@@ -5,7 +5,7 @@ class BaseAuthException(Exception):
 class RefreshRevokedException(BaseAuthException):
     
     def __init__(self):
-        super().__init__("Refresh expired")
+        super().__init__("Refresh revoked")
 
 class RefreshExpiredException(BaseAuthException):
     

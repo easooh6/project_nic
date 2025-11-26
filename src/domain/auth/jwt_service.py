@@ -56,8 +56,8 @@ class RefreshValidator:
     @staticmethod
     def validate(entity: RefreshEntity):
         if entity.revoked:
-            raise RefreshRevokedException
+            raise RefreshRevokedException()
         now = datetime.now(timezone.utc)
         if entity.expires_at < now:
-            raise RefreshExpiredException
+            raise RefreshExpiredException()
         
