@@ -2,7 +2,7 @@ import aiosmtplib
 from email.message import EmailMessage
 from src.infrastructure.settings.settings import settings
 
-class EmailService:
+class Email:
     def __init__(self):
         self.host = settings.email.SMTP_HOST
         self.port = settings.email.SMTP_PORT
