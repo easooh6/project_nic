@@ -60,3 +60,4 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             logger.debug('Database session closed')
+            pass
