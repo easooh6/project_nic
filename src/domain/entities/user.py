@@ -6,7 +6,7 @@ class User(BaseModel):
 
     id: int
     email: EmailStr
-    password_hash: int
+    password_hash: str
     is_active: bool
     role: RoleEnum
     created_at: datetime

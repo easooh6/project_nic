@@ -15,7 +15,7 @@ class RefreshTokenService:
 
         raw_token = uuid4().hex
 
-        hashed = self._hash.hash(raw_token)
+        hashed = self._hash.hash_token(raw_token)
 
         expires_at = datetime.now(timezone.utc) + timedelta(
             days=settings.auth.REFRESH_TOKEN_EXPIRE_DAYS
