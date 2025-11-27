@@ -7,6 +7,9 @@ from src.infrastructure.settings.settings import settings
 from src.domain.enums.role import RoleEnum
 from src.domain.entities.refresh import RefreshEntity
 from src.domain.exceptions.auth.auth import RefreshExpiredException, RefreshRevokedException
+from src.logger.logger import setup_logging
+
+logger = setup_logging('app')
 
 class JWT:
     def __init__(self):
@@ -22,6 +25,7 @@ class JWT:
             "type": "access",
             "exp": expire
         }
+        logger.debug('Access token was created')
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
     def decode_access_token(self, token: str) -> Dict[str, Any]:
@@ -49,6 +53,8 @@ class JWT:
             RoleEnum(role)
         except ValueError as e:
             raise RoleException() from e
+        
+        logger.debug('Access token was decoded. User: %s', str(payload["sub"]))
         return payload
 
 class RefreshValidator:

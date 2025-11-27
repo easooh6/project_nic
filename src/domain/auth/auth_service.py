@@ -10,6 +10,9 @@ from src.presentation.routers.auth.requests.user_register import UserRegisterReq
 from src.domain.exceptions.auth.auth import RefreshNotFoundException
 from src.domain.services.refresh_token_service import RefreshTokenService
 from src.domain.services.hash_service import HashService
+from src.logger.logger import setup_logging
+
+logger = setup_logging("app")
 
 class AuthService:
     """регистрация"""
@@ -35,6 +38,7 @@ class AuthService:
             role=data.role
         )
 
+        logger.debug("User %s registered", str(user.id))
         return user
     
     async def login_user(self, email: str, password: str) -> LoginResponse:
@@ -53,6 +57,7 @@ class AuthService:
         # <-- Теперь создаём refresh-токен через RefreshTokenService
         refresh_token = await self.refresh_service.create_refresh_token(user.id)
 
+        logger.debug("User %s logged in", str(user.id))
         return LoginResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -81,7 +86,8 @@ class AuthService:
         entity_user = User.model_validate(user)
         
         access = self.access_service.create_access_token(user_id, entity_user.role)
-
+        
+        logger.debug("User %s got new access", str(user.id))
         return access
 
     async def logout(self, token: str) -> bool: 
@@ -91,6 +97,7 @@ class AuthService:
         revoked_token = await self.refresh_repo.revoke_token(hashed_token)
 
         if not revoked_token:
-            raise RefreshNotFoundException
+            raise RefreshNotFoundException()
 
+        logger.debug("User with token %s**** logged out", str(hashed_token)[:5])
         return True

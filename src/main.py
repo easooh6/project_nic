@@ -3,9 +3,11 @@ from src.presentation.routers.auth.auth import router as auth_router
 from contextlib import asynccontextmanager
 from src.infrastructure.redis.client import init_redis_client, close_redis_client
 from src.infrastructure.db.db import init_db, close_db
+from src.logger.logger import setup_logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    setup_logging("app")
     await init_db()
     await init_redis_client()
     yield
