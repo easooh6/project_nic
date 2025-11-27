@@ -12,7 +12,6 @@ class UserRepository:
     
     async def create_user(self, email: str, password_hash: str, role: RoleEnum) -> User:
         async with self.session_factory() as session:
-            # Check if user already exists
             existing_user = await self.get_by_email(email)
             if existing_user:
                 raise ValueError("Email already exists")
