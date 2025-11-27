@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from src.presentation.routers.auth.auth import router as auth_router
+from src.presentation.routers.booking.booking import router as booking_router
 from contextlib import asynccontextmanager
 from src.infrastructure.redis.client import init_redis_client, close_redis_client
 from src.infrastructure.db.db import init_db, close_db
@@ -26,3 +27,4 @@ app = FastAPI(
 # app.include_router(search_router, prefix="/search", tags=["Search"])
 
 app.include_router(auth_router, prefix="/auth",tags=["Authentication"])
+app.include_router(booking_router, prefix="/bookings", tags=["Bookings"])

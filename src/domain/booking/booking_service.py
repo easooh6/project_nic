@@ -1,0 +1,141 @@
+import uuid
+from datetime import datetime, timedelta
+from src.infrastructure.redis.repository import RedisRepository
+from src.infrastructure.db.repositories.timeslot import TimeSlotRepository
+from src.infrastructure.db.repositories.booking import BookingRepository
+
+from src.domain.entities.booking import Booking
+from src.domain.enums.booking_status import BookingStatus
+from src.domain.enums.slot_status import TimeSlotStatus
+from src.domain.exceptions.booking.booking import (
+    TimeSlotUnavailableException, 
+    HoldAlreadyExistsException, 
+    BookingNotFoundException,
+    SlotCollisionException,
+    HoldNotFoundException,
+    BookingCancelForbiddenException
+)
+class BookingService:
+    HOLD_TTL_SECONDS = 120  
+    HOLD_REDIS_PREFIX = "hold:"
+
+    def __init__(self):
+        self.redis = RedisRepository()
+        self.timeslot_repo = TimeSlotRepository()
+        self.booking_repo = BookingRepository()
+        
+
+
+    async def hold(self, resource_id: int, starts_at, ends_at, user_id: int):
+        lock_key = f"hold:{resource_id}:{starts_at}-{ends_at}"
+
+        if await self.redis.exists(lock_key):
+            raise HoldAlreadyExistsException()
+
+        # get slots
+        slots = await self.timeslot_repo.get_time_slot_by_time(
+            resource_id=resource_id,
+            starts_at=starts_at,
+            ends_at=ends_at
+        )
+
+        # availability check
+        for slot in slots:
+            if slot.status != TimeSlotStatus.available:
+                raise TimeSlotUnavailableException()
+
+        await self.redis.set(lock_key, "1", ttl=self.HOLD_TTL_SECONDS)
+
+        # update status
+        for slot in slots:
+            slot.status = TimeSlotStatus.held
+            await self.timeslot_repo.update_time_slot_status(slot)
+
+        hold_id = str(uuid.uuid4())
+
+        expires_at = datetime.utcnow() + timedelta(seconds=self.HOLD_TTL_SECONDS)
+
+        return {"hold_id": hold_id, "expires_at": expires_at}
+
+
+    async def confirm(self, user_id: int, hold_id: str):
+        redis_key = f"{self.HOLD_REDIS_PREFIX}{hold_id}"
+        hold_data = await self.redis.get(redis_key)
+
+        if hold_data is None:
+            raise HoldNotFoundException()
+
+        import json
+        hold_data = json.loads(hold_data)
+
+        resource_id = hold_data["resource_id"]
+        starts_at = datetime.fromisoformat(hold_data["starts_at"])
+        ends_at = datetime.fromisoformat(hold_data["ends_at"])
+
+        slots = await self.timeslot_repo.get_time_slot_by_time(
+            resource_id=resource_id,
+            starts_at=starts_at.time(),
+            ends_at=ends_at.time()
+        )
+
+        if not slots or any(s.status != TimeSlotStatus.HELD for s in slots):
+            raise TimeSlotUnavailableException()
+
+        booked_slots = await self.timeslot_repo.get_time_slot_by_time(
+            resource_id=resource_id,
+            starts_at=starts_at.time(),
+            ends_at=ends_at.time()
+        )
+
+        if any(s.status == TimeSlotStatus.BOOKED for s in booked_slots):
+            raise SlotCollisionException()
+
+        booking_entity = Booking(
+            user_id=user_id,
+            resource_id=resource_id,
+            starts_at=starts_at,
+            ends_at=ends_at,
+            status=BookingStatus.CONFIRMED,
+            created_at=datetime.utcnow()
+        )
+
+        booking = await self.booking_repo.create_booking(booking_entity)
+
+        for slot in slots:
+            slot.status = TimeSlotStatus.BOOKED
+            await self.timeslot_repo.update_time_slot_status(slot)
+
+        await self.redis.delete(redis_key)
+
+        return booking
+
+
+    async def cancel(self, user_id: int, booking_id: int) -> None:
+        booking = await self.booking_repo.get_booking_by_id(booking_id)
+        if booking is None:
+            raise BookingNotFoundException()
+
+        if booking.user_id != user_id:
+            raise BookingCancelForbiddenException()
+
+        slots = await self.timeslot_repo.get_time_slot_by_time(
+            resource_id=booking.resource_id,
+            starts_at=booking.starts_at,
+            ends_at=booking.ends_at
+        )
+
+        for slot in slots:
+            slot.status = TimeSlotStatus.available
+            await self.timeslot_repo.update_time_slot_status(slot)
+
+        booking.status = BookingStatus.CANCELLED
+        await self.booking_repo.update_booking_status(booking)
+
+        return None
+
+
+    async def get_my_bookings(self, user_id: int):
+        bookings = await self.booking_repo.get_booking_by_user_id(user_id)
+        if bookings is None:
+            return []
+        return bookings
