@@ -59,4 +59,9 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             logger.error('Database session rollback due to error: %s', str(e))
             raise
         finally:
+<<<<<<< HEAD
             logger.debug('Database session closed')
+=======
+            logger.debug('Database session closed')
+            pass
+>>>>>>> feature/logout_bug_fix

@@ -44,18 +44,17 @@ services:
       REDIS_PORT: 6379
       REDIS_DB: ${REDIS_DB}
 
-      EMAIL_HOST: ${EMAIL_HOST}
-      EMAIL_PORT: ${EMAIL_PORT}
-      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
-      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      EMAIL_HOST: ${SMTP_HOST}
+      EMAIL_PORT: ${SMTP_PORT}
+      EMAIL_HOST_USER: ${SMTP_USER}
+      EMAIL_HOST_PASSWORD: ${SMTP_PASSWORD}
 
       PORT: 8000
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
       - .:/app
-      - /app/__pycache__
-      - /app/.git
+
     depends_on:
       redis: 
           condition: service_healthy
