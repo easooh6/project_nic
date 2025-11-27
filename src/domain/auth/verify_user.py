@@ -4,6 +4,9 @@ from src.domain.exceptions.user.user import RoleException
 from src.domain.exceptions.user.user import UserNotExistsException, UserStateException
 from src.domain.dto.auth.token import TokenDTO
 from src.domain.auth.jwt_service import JWT
+from src.logger.logger import setup_logging
+
+logger = setup_logging("app")
 
 class UserVerify:
 
@@ -31,7 +34,8 @@ class UserVerify:
         dto = await self.verify_access(token)
         role = dto.role
         self._check_role(role)
-
+        
+        logger.debug("User %s verified as admin", str(dto.sub))
         return dto
 
     async def verify_access(self, token: str) -> TokenDTO:
@@ -43,4 +47,5 @@ class UserVerify:
         
         dto = TokenDTO.model_validate(payload)
 
+        logger.debug("User %s access token verified", str(dto.sub))
         return dto

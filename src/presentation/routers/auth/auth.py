@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, Cookie, Response
 from src.domain.exceptions.auth.auth import EmailAlreadyExistsException
 from src.presentation.di.service.auth.verify import get_verify_access
 from src.presentation.routers.auth.responses.me import MeResponse
@@ -10,6 +10,7 @@ from src.presentation.routers.auth.responses.refresh import RefreshResponse
 from src.presentation.routers.auth.requests.refresh import RefreshRequest
 from src.presentation.routers.auth.requests.user_register import UserRegisterRequest
 from src.presentation.routers.auth.responses.user_register import UserRegisterResponse
+from src.presentation.routers.auth.responses.logout import LogoutResponse
 
 router = APIRouter()
 
@@ -29,6 +30,18 @@ async def refresh(refresh_request: RefreshRequest):
     response = RefreshResponse(access=access)
 
     return response
+
+@router.post("/logout", status_code=status.HTTP_200_OK, response_model=LogoutResponse)
+async def logout(response: Response, refresh_token: str = Cookie(default=None)):
+    auth_service = AuthService()
+    if not refresh_token:
+        return LogoutResponse(status=False, message="Server got None instead of Refresh Token")
+    
+    await auth_service.logout(refresh_token)
+
+    response.delete_cookie("refresh_token")
+
+    return LogoutResponse()
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register_user(user_register: UserRegisterRequest): # тут получаем данные для серва suth_service
