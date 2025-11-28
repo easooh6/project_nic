@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, Cookie, Response
 from src.domain.exceptions.auth.auth import EmailAlreadyExistsException, InvalidResetTokenException, ResetTokenNotFoundException
 from src.domain.exceptions.user.user import UserNotExistsException
 from src.presentation.di.service.auth.verify import get_verify_access
@@ -12,11 +12,13 @@ from src.presentation.routers.auth.responses.refresh import RefreshResponse
 from src.presentation.routers.auth.requests.refresh import RefreshRequest
 from src.presentation.routers.auth.requests.user_register import UserRegisterRequest
 from src.presentation.routers.auth.responses.user_register import UserRegisterResponse
+from src.presentation.routers.auth.responses.logout import LogoutResponse
 from src.presentation.requests import ForgotPasswordRequest, ResetPasswordRequest
 from src.presentation.responses import ForgotPasswordResponse, ResetPasswordResponse
 from src.logger.logger import setup_logging
 
 logger = setup_logging("auth_router")
+
 
 router = APIRouter()
 
@@ -37,14 +39,26 @@ async def refresh(refresh_request: RefreshRequest):
 
     return response
 
+@router.post("/logout", status_code=status.HTTP_200_OK, response_model=LogoutResponse)
+async def logout(response: Response, refresh_token: str = Cookie(default=None)):
+    auth_service = AuthService()
+    if not refresh_token:
+        logger.warning("Logout attempt without refresh token")
+        return LogoutResponse(status=False, message="Server got None instead of Refresh Token")
+
+    await auth_service.logout(refresh_token)
+    response.delete_cookie("refresh_token")
+    
+    logger.info("User logged out successfully")
+    return LogoutResponse()
+
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register_user(user_register: UserRegisterRequest): # тут получаем данные для серва suth_service
-    """регистрация"""
+async def register_user(user_register: UserRegisterRequest):
     try:
         auth_service = AuthService()
-        user = await auth_service.register_user(user_register) # а точнее .register_user передает
+        user = await auth_service.register_user(user_register)
 
-        return UserRegisterResponse( #Возвращаем на ручку только то что можно видеть пользователю
+        return UserRegisterResponse( 
             id=user.id,
             email=user.email,
             role=user.role,
@@ -60,7 +74,6 @@ async def register_user(user_register: UserRegisterRequest): # тут получ
     
 @router.post("/login", status_code=status.HTTP_200_OK)
 async def login_user(payload: UserLogin):
-    """логин с JWT токеном"""
     try:
         auth_service = AuthService()
         result = await auth_service.login_user(payload.email, payload.password)
@@ -82,22 +95,15 @@ async def login_user(payload: UserLogin):
 
 @router.post("/forgot", response_model=ForgotPasswordResponse, status_code=status.HTTP_200_OK)
 async def forgot_password(request: ForgotPasswordRequest):
-    """Запрос на восстановление пароля"""
     try:
         service = PasswordResetService()
         reset_token = await service.create_reset_token(request.email)
-        
-        # TODO: Отправить токен на email (интеграция с email-сервисом)
-        # В реальном приложении токен отправляется на email
-        # Здесь для демонстрации возвращаем в ответе
-        
         logger.info(f"Password reset requested for: {request.email}")
         return ForgotPasswordResponse(
             message="Password reset token has been sent to your email",
             email=request.email
         )
     except UserNotExistsException:
-        # Из соображений безопасности не раскрываем существование email
         logger.warning(f"Password reset requested for non-existent email: {request.email}")
         return ForgotPasswordResponse(
             message="If this email exists, password reset instructions have been sent",
@@ -113,7 +119,6 @@ async def forgot_password(request: ForgotPasswordRequest):
 
 @router.post("/reset", response_model=ResetPasswordResponse, status_code=status.HTTP_200_OK)
 async def reset_password(request: ResetPasswordRequest):
-    """Сброс пароля с использованием токена"""
     try:
         service = PasswordResetService()
         await service.reset_password(request.token, request.new_password)

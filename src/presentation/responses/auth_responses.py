@@ -15,7 +15,7 @@ class UserResponse(BaseModel):
 
 class LoginResponse(BaseModel):
     access_token: str
-    # refresh_token: str  # TODO
+    refresh_token: str
     token_type: str = "Bearer"
     user: UserResponse
     
