@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from src.domain.booking.booking_service import BookingService
 from src.presentation.di.service.auth.verify import get_verify_access
 from src.domain.dto.auth.token import TokenDTO
@@ -8,6 +8,8 @@ from src.presentation.routers.booking.requests.confirm import BookingConfirmRequ
 from src.presentation.routers.booking.responses.hold_response import BookingHoldResponse
 from src.presentation.routers.booking.responses.booking_response import BookingResponse
 from src.presentation.routers.booking.responses.me import BookingMeResponse, BookingMeItem
+from presentation.routers.booking.responses.availability_response import AvailabilityResponse
+from datetime import date
 
 from src.domain.exceptions.booking.booking import (
     TimeSlotUnavailableException,
@@ -73,5 +75,12 @@ async def get_my_bookings(user: TokenDTO = Depends(get_verify_access)):
     response = BookingMeResponse(
         bookings=[BookingMeItem(**b.model_dump()) for b in items]
     )
-
     return response
+
+@router.get("/{resource_id}/availability", response_model=AvailabilityResponse)
+async def get_availability(resource_id: int, date_param: date = Query(..., alias="date")):
+    service = BookingService()
+    
+    slots = await service.get_availability(resource_id, date_param)
+    return AvailabilityResponse(slots=slots)
+

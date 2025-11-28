@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from src.infrastructure.redis.repository import RedisRepository
 from src.infrastructure.db.repositories.timeslot import TimeSlotRepository
 from src.infrastructure.db.repositories.booking import BookingRepository
@@ -139,3 +139,33 @@ class BookingService:
         if bookings is None:
             return []
         return bookings
+    
+
+    async def get_availability(self, resource_id: int, requested_date: date):
+        key = f"avail:{resource_id}:{requested_date}"
+
+        cached = await self.redis.get(key)
+        if cached:
+            return cached
+
+        slots = await self.timeslot_repo.get_time_slots_by_resource_id(resource_id)
+
+        filtered = [
+            s for s in slots
+            if s.starts_at.date() == requested_date
+            and s.status == TimeSlotStatus.available
+        ]
+
+        response = [
+            {
+                "id": s.id,
+                "starts_at": s.starts_at,
+                "ends_at": s.ends_at,
+                "status": s.status,
+            }
+            for s in filtered
+        ]
+
+        await self.redis.set(key, response, ttl=60)
+
+        return response
