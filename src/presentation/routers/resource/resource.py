@@ -1,8 +1,8 @@
 from fastapi import APIRouter, status, HTTPException, UploadFile, File, Depends
 from src.domain.services.resource_service import ResourceService
-from src.presentation.responses.resource_responses import ResourceResponse
-from src.presentation.responses.resource_responses import UploadFileResponse
-from src.presentation.requests.resource_requests import ResourceCreateRequest
+from src.presentation.routers.resource.response.resource_responses import ResourceResponse
+from src.presentation.routers.resource.response.resource_responses import UploadFileResponse
+from src.presentation.routers.resource.request.resource_requests import ResourceCreateRequest
 from src.presentation.di.service.auth.verify import get_verify_access
 from src.domain.dto.auth.token import TokenDTO
 
@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post("/", response_model=ResourceResponse, status_code=status.HTTP_201_CREATED)
 async def create_resource(
     resource_data: ResourceCreateRequest,
-    user: TokenDTO = Depends(get_verify_access)
+    #user: TokenDTO = Depends(get_verify_access)
 ):
     try:
         service = ResourceService()
@@ -24,7 +24,7 @@ async def create_resource(
 async def upload_file_to_resource(
     resource_id: int, 
     file: UploadFile = File(...),
-    user: TokenDTO = Depends(get_verify_access)
+    #user: TokenDTO = Depends(get_verify_access)
 ):
     try:
         service = ResourceService()

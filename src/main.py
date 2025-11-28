@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from src.presentation.routers.auth.auth import router as auth_router
-from src.presentation.routers.auth.resource import router as resource_router
+from src.presentation.routers.resource.resource import router as resource_router
 from contextlib import asynccontextmanager
 from src.infrastructure.redis.client import init_redis_client, close_redis_client
 from src.infrastructure.db.db import init_db, close_db
