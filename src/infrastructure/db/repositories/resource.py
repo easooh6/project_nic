@@ -57,6 +57,18 @@ class ResourceRepository:
                     setattr(resource, key, value)
             await session.flush()
             return resource
+        
+    async def update_file_path(self, resource_id: int, file_path: str) -> Resource:
+        async with self.session_factory() as session:
+            result = await session.execute(select(Resource).where(Resource.id == resource_id))
+            resource = result.scalar_one_or_none()
+            
+            if resource:
+                resource.file_path = file_path
+                await session.commit()
+                await session.refresh(resource)
+            
+            return resource
 
     async def delete(self, resource_id: int) -> bool:
         async with self.session_factory() as session:

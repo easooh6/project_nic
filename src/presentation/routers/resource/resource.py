@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post("/", response_model=ResourceResponse, status_code=status.HTTP_201_CREATED)
 async def create_resource(
     resource_data: ResourceCreateRequest,
-    #user: TokenDTO = Depends(get_verify_access)
+    user: TokenDTO = Depends(get_verify_access)
 ):
     try:
         service = ResourceService()
@@ -24,7 +24,7 @@ async def create_resource(
 async def upload_file_to_resource(
     resource_id: int, 
     file: UploadFile = File(...),
-    #user: TokenDTO = Depends(get_verify_access)
+    user: TokenDTO = Depends(get_verify_access)
 ):
     try:
         service = ResourceService()

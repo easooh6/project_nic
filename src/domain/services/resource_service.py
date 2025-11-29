@@ -30,7 +30,6 @@ class ResourceService:
                 file_path=data.file_path
             )
         except Exception as e:
-            logger.error(f"Resource creation failed: {e}")
             raise ResourceCreationException(str(e))
 
         await self.redis.delete("resources:all")
@@ -44,17 +43,16 @@ class ResourceService:
 
         cached = await self.redis.get(cache_key)
         if cached:
-            logger.debug("Loaded all resources from Redis cache")
+            logger.debug("Loaded all resources from redis cache")
             items = json.loads(cached)
             return [ResourceResponse(**item) for item in items]
 
         resources = await self.repo.get_all()
-
         items = [ResourceResponse.model_validate(r).model_dump() for r in resources]
 
         await self.redis.set(cache_key, json.dumps(items), ttl=self.CACHE_TTL)
 
-        logger.debug("Loaded all resources from DB & cached into Redis")
+        logger.debug("Loaded all resources from DB & cached them")
         return [ResourceResponse(**item) for item in items]
 
 
@@ -63,7 +61,7 @@ class ResourceService:
 
         cached = await self.redis.get(cache_key)
         if cached:
-            logger.debug(f"Loaded resource {resource_id} from Redis cache")
+            logger.debug("Loaded resource from redis cache")
             return ResourceResponse(**json.loads(cached))
 
         resource = await self.repo.get_by_id(resource_id)
@@ -73,7 +71,7 @@ class ResourceService:
         dto = ResourceResponse.model_validate(resource)
         await self.redis.set(cache_key, dto.model_dump_json(), ttl=self.CACHE_TTL)
 
-        logger.debug(f"Loaded resource {resource_id} from DB and cached")
+        logger.debug("Loaded resource from DB and cached it")
         return dto
 
     async def upload_file(self, resource_id: int, file: UploadFile, user_id: int):
@@ -93,10 +91,11 @@ class ResourceService:
                 size_bytes=len(content),
                 mime=file.content_type,
                 owner_user_id=user_id
+            
             )
+            await self.repo.update_file_path(resource_id, save_path)
 
         except Exception as e:
-            logger.error(f"File upload error: {e}")
             raise FileUploadException(str(e))
 
         await self.redis.delete(f"resource:{resource_id}")
