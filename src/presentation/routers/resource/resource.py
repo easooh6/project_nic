@@ -1,7 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, UploadFile, File, Depends
 from src.domain.services.resource_service import ResourceService
-from src.presentation.routers.resource.response.resource_responses import ResourceResponse
-from src.presentation.routers.resource.response.resource_responses import UploadFileResponse
+from src.presentation.routers.resource.response.resource_responses import ResourceResponse, UploadFileResponse
 from src.presentation.routers.resource.request.resource_requests import ResourceCreateRequest
 from src.presentation.di.service.auth.verify import get_verify_access
 from src.domain.dto.auth.token import TokenDTO

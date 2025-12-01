@@ -1,4 +1,3 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from src.infrastructure.db.models.resource import Resource
 from src.infrastructure.db.db import get_db_session

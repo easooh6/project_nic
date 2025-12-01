@@ -3,10 +3,8 @@ from fastapi import UploadFile
 from src.infrastructure.db.repositories.resource import ResourceRepository
 from src.infrastructure.db.repositories.file_upload import FileUploadRepository
 from src.infrastructure.redis.repository import RedisRepository
-
 from src.presentation.routers.resource.response.resource_responses import ResourceResponse, UploadFileResponse 
 from src.presentation.routers.resource.request.resource_requests import ResourceCreateRequest
-
 from src.domain.exceptions.resource_exceptions import ResourceNotFoundException, FileUploadException, ResourceCreationException
 from src.logger.logger import setup_logging
 
@@ -101,5 +99,5 @@ class ResourceService:
         await self.redis.delete(f"resource:{resource_id}")
         await self.redis.delete("resources:all")
 
-        logger.debug(f"File uploaded for resource {resource_id}")
+        logger.debug(f"File uploaded for resource {resource_id} and deleted cache for resources")
         return UploadFileResponse.model_validate(new_file)
