@@ -64,7 +64,7 @@ class ResourceRepository:
             
             if resource:
                 resource.file_path = file_path
-                await session.commit()
+                await session.flush() 
                 await session.refresh(resource)
             
             return resource
