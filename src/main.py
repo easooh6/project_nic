@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from src.presentation.routers.auth.auth import router as auth_router
+from src.presentation.routers.booking.booking import router as booking_router
 from src.presentation.routers.auth.admin_resources import router as admin_resources_router
 from src.presentation.routers.resource.resource import router as resource_router
 from contextlib import asynccontextmanager
@@ -29,6 +30,7 @@ setup_exception_handler(app)
 # app.include_router(search_router, prefix="/search", tags=["Search"])
 
 app.include_router(auth_router, prefix="/auth",tags=["Authentication"])
+app.include_router(booking_router, prefix="/bookings", tags=["Bookings"])
 app.include_router(admin_resources_router)
 app.include_router(resource_router, prefix="/resources", tags=["Resources"])
 
