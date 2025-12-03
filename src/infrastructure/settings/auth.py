@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
 
 class AuthSettings(BaseSettings):
     JWT_SECRET_KEY: str
