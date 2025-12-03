@@ -3,7 +3,9 @@ from sqlalchemy import text
 from src.infrastructure.settings.settings import settings
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from src.logger.logger import setup_logging
 
+logger = setup_logging("db")
 
 _async_engine: AsyncEngine = None
 _async_session_fabric = None
@@ -29,7 +31,7 @@ async def init_db():
     
     async with _async_engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
-        print("db connection successfully established")
+        logger.info("DB connection successfully established")
 
     if _async_session_fabric is None:
         _async_session_fabric = async_sessionmaker(_async_engine,expire_on_commit=False)
@@ -51,8 +53,11 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         try:
             yield session
             await session.commit()
+            logger.debug('Database session committed successfully')
         except Exception as e:
             await session.rollback()
+            logger.error('Database session rollback due to error: %s', str(e))
             raise
         finally:
+            logger.debug('Database session closed')
             pass

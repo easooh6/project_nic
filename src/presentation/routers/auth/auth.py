@@ -1,15 +1,23 @@
-from fastapi import APIRouter, status, Depends, HTTPException
-from src.domain.exceptions.auth.auth import EmailAlreadyExistsException
+from fastapi import APIRouter, status, Depends, HTTPException, Cookie, Response
+from src.domain.exceptions.auth.auth import EmailAlreadyExistsException, InvalidResetTokenException, ResetTokenNotFoundException
+from src.domain.exceptions.user.user import UserNotExistsException
 from src.presentation.di.service.auth.verify import get_verify_access
 from src.presentation.routers.auth.responses.me import MeResponse
 from src.domain.dto.auth.token import TokenDTO
 from src.domain.user.user import UserService
 from src.domain.dto.user.user_dto import UserRead, UserLogin
 from src.domain.auth.auth_service import AuthService
+from src.domain.auth.password_reset_service import PasswordResetService
 from src.presentation.routers.auth.responses.refresh import RefreshResponse
 from src.presentation.routers.auth.requests.refresh import RefreshRequest
 from src.presentation.routers.auth.requests.user_register import UserRegisterRequest
 from src.presentation.routers.auth.responses.user_register import UserRegisterResponse
+from src.presentation.routers.auth.responses.logout import LogoutResponse
+from src.presentation.requests import ForgotPasswordRequest, ResetPasswordRequest
+from src.presentation.responses import ForgotPasswordResponse, ResetPasswordResponse
+from src.logger.logger import setup_logging
+
+logger = setup_logging("app")
 
 router = APIRouter()
 
@@ -30,14 +38,25 @@ async def refresh(refresh_request: RefreshRequest):
 
     return response
 
+@router.post("/logout", status_code=status.HTTP_200_OK, response_model=LogoutResponse)
+async def logout(response: Response, refresh_token: str = Cookie(default=None)):
+    auth_service = AuthService()
+    if not refresh_token:
+        return LogoutResponse(status=False, message="Server got None instead of Refresh Token")
+    
+    await auth_service.logout(refresh_token)
+
+    response.delete_cookie("refresh_token")
+
+    return LogoutResponse()
+
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register_user(user_register: UserRegisterRequest): # тут получаем данные для серва suth_service
-    """регистрация"""
+async def register_user(user_register: UserRegisterRequest): 
     try:
         auth_service = AuthService()
-        user = await auth_service.register_user(user_register) # а точнее .register_user передает
+        user = await auth_service.register_user(user_register) 
 
-        return UserRegisterResponse( #Возвращаем на ручку только то что можно видеть пользователю
+        return UserRegisterResponse( 
             id=user.id,
             email=user.email,
             role=user.role,
@@ -69,3 +88,31 @@ async def login_user(payload: UserLogin):
             detail=f"Internal error: {e}"
         )
 
+
+@router.post("/forgot", response_model=ForgotPasswordResponse, status_code=status.HTTP_200_OK)
+async def forgot_password(request: ForgotPasswordRequest):
+    service = PasswordResetService()
+    await service.create_reset_token(request.email)
+    logger.info(f"Password reset requested for: {request.email}")
+    return ForgotPasswordResponse(
+        message="Password reset token has been sent to your email",
+        email=request.email
+    )
+
+
+@router.get("/reset-validate-token", status_code=status.HTTP_200_OK)
+async def validate_reset_token(token: str):
+    service = PasswordResetService()
+    await service.validate_reset_token(token)
+    logger.info(f"Reset token validated successfully")
+    return {"valid": True, "message": "Token is valid"}
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse, status_code=status.HTTP_200_OK)
+async def reset_password(request: ResetPasswordRequest):
+    service = PasswordResetService()
+    await service.reset_password(request.token, request.new_password)
+    logger.info(f"Password successfully reset")
+    return ResetPasswordResponse(
+        message="Password has been successfully reset"
+    )
