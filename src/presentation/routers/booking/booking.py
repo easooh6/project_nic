@@ -8,7 +8,7 @@ from src.presentation.routers.booking.requests.confirm import BookingConfirmRequ
 from src.presentation.routers.booking.responses.hold_response import BookingHoldResponse
 from src.presentation.routers.booking.responses.booking_response import BookingResponse
 from src.presentation.routers.booking.responses.me import BookingMeResponse, BookingMeItem
-from presentation.routers.booking.responses.availability_response import AvailabilityResponse
+from src.presentation.routers.booking.responses.availability_response import AvailabilityResponse
 from datetime import date
 
 from src.domain.exceptions.booking.booking import (

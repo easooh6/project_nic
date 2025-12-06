@@ -7,6 +7,7 @@ from src.presentation.routers.resource.response.resource_responses import Resour
 from src.presentation.routers.resource.request.resource_requests import ResourceCreateRequest
 from src.domain.exceptions.resource_exceptions import ResourceNotFoundException, FileUploadException, ResourceCreationException
 from src.logger.logger import setup_logging
+from src.infrastructure.settings.settings import settings 
 
 logger = setup_logging("app")
 
@@ -18,6 +19,7 @@ class ResourceService:
         self.repo = ResourceRepository()
         self.file_repo = FileUploadRepository()
         self.redis = RedisRepository()
+        self.settings = settings
 
     async def create(self, data: ResourceCreateRequest):
         try:
@@ -34,7 +36,6 @@ class ResourceService:
 
         logger.debug("Created new resource")
         return ResourceResponse.model_validate(resource)
-
 
     async def get_all(self):
         cache_key = "resources:all"
@@ -78,7 +79,7 @@ class ResourceService:
             raise ResourceNotFoundException(resource_id)
 
         try:
-            save_path = f"/app/uploads/{file.filename}"
+            save_path = settings.upload.UPLOAD_ROOT / file.filename
 
             content = await file.read()
             with open(save_path, "wb") as f:
@@ -98,6 +99,5 @@ class ResourceService:
 
         await self.redis.delete(f"resource:{resource_id}")
         await self.redis.delete("resources:all")
-
         logger.debug(f"File uploaded for resource {resource_id} and deleted cache for resources")
         return UploadFileResponse.model_validate(new_file)

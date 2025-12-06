@@ -34,6 +34,14 @@ class ResourceRepository:
             result = await session.execute(select(Resource).where(Resource.is_active == True))
             return result.scalars().all()
 
+    async def get_resources_with_path(self) -> set[str]:
+        async with self.session_factory() as session:
+            query = select(Resource.file_path).distinct().where(Resource.file_path != None)
+
+            result = await session.execute(query)
+
+            return set(result.scalars().all())
+
     async def filter(self, capacity: int | None = None, location: str | None = None) -> list[Resource]:
         async with self.session_factory() as session:
             query = select(Resource).where(Resource.is_active == True)

@@ -7,7 +7,7 @@ from src.domain.admin.dto import (
 )
 from src.domain.admin.services import AdminResourceService
 
-from src.domain.auth.verify_user import get_verify_admin  
+from src.presentation.di.service.auth.verify import get_verify_admin  
 from src.domain.dto.auth.token import TokenDTO            
 
 

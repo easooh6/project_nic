@@ -2,7 +2,6 @@ import secrets
 from src.infrastructure.db.repositories.user import UserRepository
 from src.infrastructure.redis.repository import RedisRepository
 from src.domain.services.hash_service import HashService
-from src.infrastructure.utils.hashing.password import hash_password
 from src.domain.services.email_service import EmailService
 from src.domain.exceptions.user.user import UserNotExistsException
 from src.domain.exceptions.auth.auth import InvalidResetTokenException, ResetTokenNotFoundException
@@ -73,9 +72,8 @@ class PasswordResetService:
         if not user:
             logger.error(f"User not found for reset token, user_id={user_id}")
             raise UserNotExistsException()
-        
-        from src.infrastructure.utils.hashing.password import hash_password
-        password_hash = hash_password(new_password)
+
+        password_hash = self.hash_service.hash(new_password)
         await self.user_repo.update_user(user_id, {"password_hash": password_hash})
         
         await self.redis_repo.delete(redis_key)

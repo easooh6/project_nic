@@ -11,7 +11,8 @@ class AdminResourceCreate(BaseModel):
         default=None,
         description="",
     )
-
+    class Config:
+        from_attributes = True
 
 class AdminResourceUpdate(BaseModel):
     name: Optional[str] = Field(default=None, description="")
@@ -29,7 +30,8 @@ class AdminResourceUpdate(BaseModel):
         default=None,
         description="",
     )
-
+    class Config:
+        from_attributes = True
 
 class AdminResourceRead(BaseModel):
     id: int
@@ -39,3 +41,5 @@ class AdminResourceRead(BaseModel):
     is_active: bool
     file_path: Optional[str] = None
     description: Optional[str] = None
+    class Config:
+        from_attributes = True
