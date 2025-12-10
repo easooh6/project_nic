@@ -64,15 +64,25 @@ class BookingRepository:
             models = [Booking.model_validate(model) for model in models_raw]
 
             return models
-    
-    async def get_booking_by_status(self, user_id: int, status: BookingStatus) -> list[Booking] | None:
+        
+    async def get_available_bookings(self) -> list[int] | list[None]:
 
         async with self.session_factory() as session:
 
+            query = select(BookingModel.id).where(BookingModel.status==BookingStatus.CONFIRMED)
+
+            ids = (await session.execute(query)).scalars().all()
+
+            return ids
+
+    async def get_booking_by_status(self, status: BookingStatus, user_id: int) -> list[Booking] | None:
+
+        async with self.session_factory() as session:
+            
             query = select(BookingModel).where(
-                BookingModel.user_id==user_id,
-                BookingModel.status==status
-                )
+                    BookingModel.user_id==user_id,
+                    BookingModel.status==status
+                    )
             
             models_raw = (await session.execute(query)).scalars().all()
 
@@ -106,6 +116,19 @@ class BookingRepository:
                 )
             result = await session.execute(query)
  
+            return result.rowcount
+        
+    async def update_booking_status_to_archived(self, ids: list[int]):
+
+        async with self.session_factory() as session:
+
+            query = update(BookingModel).where(
+                BookingModel.id.in_(ids)).values(
+                    status=BookingStatus.ARCHIVED
+                )
+            
+            result = await session.execute(query)
+
             return result.rowcount
 
     async def delete_booking_by_id(self, id: int) -> int:

@@ -59,13 +59,14 @@ class TimeSlotRepository:
             return ids
 
 
-    async def update_held_slots(self, ids: list[int]):
+    async def update_held_slots(self, ids: list[int]) -> int:
         
         async with self.session_factory() as session:
 
             query = update(TimeSlotModel).where(
                 TimeSlotModel.id.in_(ids)).values(
-                    status=TimeSlotStatus.AVAILABLE)
+                    status=TimeSlotStatus.AVAILABLE
+                    )
 
             result = await session.execute(query)
 

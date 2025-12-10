@@ -12,7 +12,7 @@ _async_session_fabric = None
 
 def get_session_fabric():
 
-    if _async_session_fabric is None:
+    if _async_engine is None:
         raise RuntimeError("Database is not initialized.")
     
     return _async_session_fabric
