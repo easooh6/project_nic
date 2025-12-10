@@ -1,10 +1,11 @@
 from src.infrastructure.db.db import get_db_session
 from typing import Callable, AsyncContextManager
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, func
 from src.domain.entities.timeslot import TimeSlot
 from src.infrastructure.db.models.timeslot import TimeSlot as TimeSlotModel
 from datetime import time
+from src.domain.enums.slot_status import TimeSlotStatus
 
 class TimeSlotRepository:
 
@@ -45,7 +46,31 @@ class TimeSlotRepository:
             entities = [TimeSlot.model_validate(model) for model in models]
 
             return entities
-            
+    
+    async def get_overdue_slots(self, ttl: int) -> list[int]:
+        
+        async with self.session_factory() as session:
+
+            query = select(TimeSlotModel.id).where(TimeSlotModel.status == TimeSlotStatus.HELD,
+                                           func.extract('epoch', func.now() - TimeSlotModel.starts_at) > ttl)
+
+            ids = (await session.execute(query)).scalars().all()
+
+            return ids
+
+
+    async def update_held_slots(self, ids: list[int]):
+        
+        async with self.session_factory() as session:
+
+            query = update(TimeSlotModel).where(
+                TimeSlotModel.id.in_(ids)).values(
+                    status=TimeSlotStatus.AVAILABLE)
+
+            result = await session.execute(query)
+
+            return result.rowcount
+
     async def get_time_slot_by_time(self, resource_id: int | None,
                                      starts_at: time, ends_at: time) -> list[TimeSlot]:
         
@@ -69,13 +94,20 @@ class TimeSlotRepository:
 
             return entities
         
-    async def update_time_slot_status(self, entity: TimeSlot) -> int:
+    async def update_time_slot_status(self, entity: TimeSlot, booking_id: int = None) -> int:
 
         async with self.session_factory() as session:
-
-            query = update(TimeSlotModel).where(TimeSlotModel.id == entity.id).values(
-                    status=entity.status
+            
+            if booking_id is None:
+                query = update(TimeSlotModel).where(TimeSlotModel.id == entity.id).values(
+                        status=entity.status
+                    )
+            else:
+                query = update(TimeSlotModel).where(TimeSlotModel.id == entity.id).values(
+                    status=entity.status,
+                    booking_id=booking_id
                 )
+
             result = await session.execute(query)
  
             return result.rowcount
