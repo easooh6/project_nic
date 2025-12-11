@@ -7,7 +7,7 @@ from src.logger.logger import setup_logging
 logger = setup_logging("app")
 
 @broker.task(schedule=[
-    {"cron": "0 0 0 * *"}
+    {"cron": "*/1 * * * *"} #{"cron": "0 0 0 * *"}
             ])
 async def cleanup_uploads_task(service: FileUploadService = TaskiqDepends(get_file_upload_service)):
     try:
@@ -15,7 +15,7 @@ async def cleanup_uploads_task(service: FileUploadService = TaskiqDepends(get_fi
 
         deleted_count = await service.cleanup_uploads()
 
-        logger.info("Deleted cleanup-uploads %d(upload cron task)", deleted_count)
+        logger.info("Deleted cleanup-uploads %s(upload cron task)", str(deleted_count))
 
         return deleted_count
     except Exception as e:

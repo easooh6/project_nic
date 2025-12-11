@@ -7,7 +7,7 @@ from src.logger.logger import setup_logging
 logger = setup_logging("app")
 
 @broker.task(schedule=[
-    {"cron": "0 0 0 * *"}
+    {"cron": "*/1 * * * *"} # {"cron": "0 0 0 * *"}
             ])
 async def archive_bookings_task(service: BookingService = TaskiqDepends(get_booking_service)):
     
@@ -16,7 +16,7 @@ async def archive_bookings_task(service: BookingService = TaskiqDepends(get_book
 
         updated_rows = await service.update_available_bookings_to_archived()
 
-        logger.info("%d rows are updated(booking cron task)", updated_rows)
+        logger.info("%s rows are updated(booking cron task)", str(updated_rows))
 
         return updated_rows
     
