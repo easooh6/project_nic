@@ -29,7 +29,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DB_HOST: ${DB_HOST}
+      DB_HOST: postgres
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
@@ -50,6 +50,10 @@ services:
       EMAIL_HOST_PASSWORD: ${SMTP_PASSWORD}
 
       PORT: 8000
+    healthcheck:
+      test: ["CMD", "echo", "ok"]
+      interval: 10s
+      retries: 3
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
@@ -79,6 +83,65 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.scheduler
+    container_name: project_nic_scheduler
+    environment:
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: ${REDIS_DB}
+      REDIS_SCHEDULER: ${REDIS_SCHEDULER}
+      REDIS_BROKER: ${REDIS_BROKER}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - .:/app
+    networks:
+      - app_network
+    
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: project_nic_worker
+    environment:
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: ${REDIS_DB}
+      REDIS_SCHEDULER: ${REDIS_SCHEDULER}
+      REDIS_BROKER: ${REDIS_BROKER}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - .:/app
+    networks:
+      - app_network
+    
 
 
 volumes:

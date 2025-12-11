@@ -5,3 +5,4 @@ class BookingStatus(Enum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
+    ARCHIVED = "archived"

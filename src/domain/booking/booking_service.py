@@ -15,6 +15,10 @@ from src.domain.exceptions.booking.booking import (
     HoldNotFoundException,
     BookingCancelForbiddenException
 )
+from src.logger.logger import setup_logging
+
+logger = setup_logging("app")
+
 class BookingService:
     HOLD_TTL_SECONDS = 120  
     HOLD_REDIS_PREFIX = "hold:"
@@ -41,14 +45,14 @@ class BookingService:
 
         # availability check
         for slot in slots:
-            if slot.status != TimeSlotStatus.available:
+            if slot.status != TimeSlotStatus.AVAILABLE:
                 raise TimeSlotUnavailableException()
 
         await self.redis.set(lock_key, "1", ttl=self.HOLD_TTL_SECONDS)
 
         # update status
         for slot in slots:
-            slot.status = TimeSlotStatus.held
+            slot.status = TimeSlotStatus.HELD
             await self.timeslot_repo.update_time_slot_status(slot)
 
         hold_id = str(uuid.uuid4())
@@ -103,7 +107,7 @@ class BookingService:
 
         for slot in slots:
             slot.status = TimeSlotStatus.BOOKED
-            await self.timeslot_repo.update_time_slot_status(slot)
+            await self.timeslot_repo.update_time_slot_status(slot, booking.id)
 
         await self.redis.delete(redis_key)
 
@@ -125,7 +129,7 @@ class BookingService:
         )
 
         for slot in slots:
-            slot.status = TimeSlotStatus.available
+            slot.status = TimeSlotStatus.AVAILABLE
             await self.timeslot_repo.update_time_slot_status(slot)
 
         booking.status = BookingStatus.CANCELLED
@@ -169,3 +173,31 @@ class BookingService:
         await self.redis.set(key, response, ttl=60)
 
         return response
+    
+    async def update_available_bookings_to_archived(self) -> int:
+        
+        ids = await self.booking_repo.get_available_bookings()
+
+        if not ids:
+            logger.debug("No available bookings found")
+            return 0
+        
+        updated_rows = await self.booking_repo.update_booking_status_to_archived(ids)
+
+        return updated_rows
+
+    async def update_overdue_ids(self) -> int:
+
+        ids = await self.timeslot_repo.get_overdue_slots(self.HOLD_TTL_SECONDS)
+
+        if not ids:
+            logger.debug("No overdue slots to release")
+            return 0
+        
+        updated_rows = await self.timeslot_repo.update_held_slots(ids)
+        
+        return updated_rows
+
+# obj = BookingService()
+# import asyncio
+# asyncio.run(obj.update_available_bookings_to_archived())

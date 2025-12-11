@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from src.infrastructure.db.models.file_upload import FileUpload
 from src.infrastructure.db.db import get_db_session
 
@@ -49,6 +49,14 @@ class FileUploadRepository():
             result = await session.execute(
                 select(FileUpload).where(FileUpload.owner_user_id == owner_user_id)
             )
+            return result.scalars().all()
+
+    async def get_paths(self):
+        async with self.session_factory() as session:
+            query = select(FileUpload.path)
+
+            result = await session.execute(query)
+
             return result.scalars().all()
 
     # UPDATE путь | размер
@@ -101,3 +109,14 @@ class FileUploadRepository():
             except Exception:
                 pass
             return False
+    
+    async def delete_by_files(self, file_names: set[str]) -> int:
+        async with self.session_factory() as session:
+            
+            paths = list(file_names)
+
+            query = delete(FileUpload).where(FileUpload.path.in_(paths))
+            result = await session.execute(query)
+
+            return result.rowcount
+
